@@ -4,5 +4,8 @@
     "dotenv": "^17.2.0",
     "fs": "^0.0.1-security",
     "puppeteer": "^24.14.0"
+  },
+  "scripts": {
+    "start": "node index.js"
   }
 }
