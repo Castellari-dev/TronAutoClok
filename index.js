@@ -49,6 +49,18 @@ function gerarHorariosDoDia(data) {
     
     horariosAleatorioDoDia[data] = horariosGerados;
     
+    // Console visual com os horários do dia
+    console.log('\n' + '='.repeat(50));
+    console.log('📅 HORÁRIOS DE PONTO DEFINIDOS PARA O DIA');
+    console.log('='.repeat(50));
+    console.log(`📆 Data: ${data}`);
+    console.log('⏰ Horários programados:');
+    horariosGerados.forEach((horario, index) => {
+        const periodo = ['Entrada Manhã', 'Saída Almoço', 'Volta Almoço', 'Saída Tarde'][index];
+        console.log(`   ${index + 1}. ${periodo}: ${horario}`);
+    });
+    console.log('='.repeat(50) + '\n');
+    
     registrarLog(`Horários gerados para ${data}: ${horariosGerados.join(', ')}`);
     
     return horariosGerados;
@@ -99,10 +111,18 @@ async function checarHorario() {
         // Gera os horários aleatórios do dia se ainda não foram gerados
         const horariosAleatorios = gerarHorariosDoDia(data);
         
+        // Mostra status atual no console
+        const agora = new Date();
+        const horaAtual = agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        const proximoHorario = horariosAleatorios.find(h => h > horaAtual);
+        
+        process.stdout.write(`\r⏱️  ${horaAtual} | Próximo ponto: ${proximoHorario || 'Fim do expediente'} `);
+        
         // Verifica se o horário atual coincide com algum dos horários aleatórios
         if (horariosAleatorios.includes(horaMinuto)) {
             if (ultimosLogins[horaMinuto] !== data) {
                 ultimosLogins[horaMinuto] = data;
+                console.log(`\n🎯 Horário de ponto detectado: ${horaMinuto}`);
                 registrarLog(`Horário de ponto detectado: ${horaMinuto}`);
                 await login();
             }
@@ -116,4 +136,6 @@ async function checarHorario() {
 setInterval(checarHorario, 60 * 1000);
 checarHorario();
 
+console.log('🚀 Sistema de ponto com horários aleatórios iniciado');
+console.log('💡 Os horários serão exibidos quando forem gerados pela primeira vez no dia');
 registrarLog('Sistema de ponto com horários aleatórios iniciado');
