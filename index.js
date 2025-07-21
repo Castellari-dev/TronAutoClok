@@ -2,6 +2,7 @@ require('dotenv').config();
 const puppeteer = require('puppeteer');
 const axios = require('axios');
 const fs = require('fs');
+const moment = require('moment-timezone');
 
 // Intervalos de horários (início e fim em minutos)
 const intervalosHorarios = [
@@ -103,21 +104,19 @@ async function login() {
 
 async function checarHorario() {
     try {
-        const res = await axios.get('http://worldtimeapi.org/api/timezone/America/Sao_Paulo');
-        const dataHora = res.data.datetime;
-        const [data, horaCompleta] = dataHora.split('T');
-        const horaMinuto = horaCompleta.slice(0, 5);
-        
+        const agoraSp = moment().tz("America/Sao_Paulo");
+        const data = agoraSp.format("YYYY-MM-DD");
+        const horaMinuto = agoraSp.format("HH:mm");
+
         // Gera os horários aleatórios do dia se ainda não foram gerados
         const horariosAleatorios = gerarHorariosDoDia(data);
-        
+
         // Mostra status atual no console
-        const agora = new Date();
-        const horaAtual = agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        const horaAtual = agoraSp.format("HH:mm");
         const proximoHorario = horariosAleatorios.find(h => h > horaAtual);
-        
+
         process.stdout.write(`\r⏱️  ${horaAtual} | Próximo ponto: ${proximoHorario || 'Fim do expediente'} `);
-        
+
         // Verifica se o horário atual coincide com algum dos horários aleatórios
         if (horariosAleatorios.includes(horaMinuto)) {
             if (ultimosLogins[horaMinuto] !== data) {
@@ -128,9 +127,11 @@ async function checarHorario() {
             }
         }
     } catch (error) {
-        registrarLog(`Erro ao checar horário: ${error.message}`);
+        const mensagemErro = error.message || 'Erro desconhecido';
+        registrarLog(`Erro ao checar horário: ${mensagemErro}`);
     }
 }
+
 
 // Executa a cada minuto
 setInterval(checarHorario, 60 * 1000);
