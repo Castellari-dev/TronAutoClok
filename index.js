@@ -1,6 +1,5 @@
 require('dotenv').config();
 const puppeteer = require('puppeteer');
-const axios = require('axios');
 const fs = require('fs');
 const moment = require('moment-timezone');
 
@@ -14,6 +13,7 @@ const intervalosHorarios = [
 
 let ultimosLogins = {};
 let horariosAleatorioDoDia = {};
+let jaResetouHoje = false;
 
 function registrarLog(mensagem) {
     const agora = new Date();
@@ -37,6 +37,21 @@ function gerarHorarioAleatorio(horaInicio, horaFim) {
     const minuto = minutosAleatorios % 60;
     
     return `${hora.toString().padStart(2, '0')}:${minuto.toString().padStart(2, '0')}`;
+}
+
+function resetarSistema() {
+    console.log('\n' + '🔄'.repeat(20));
+    console.log('🔄 RESET AUTOMÁTICO DO SISTEMA - 07:50');
+    console.log('🔄'.repeat(20));
+    
+    // Limpa os dados do dia anterior
+    ultimosLogins = {};
+    horariosAleatorioDoDia = {};
+    jaResetouHoje = true;
+    
+    registrarLog('Sistema resetado automaticamente às 07:50');
+    console.log('✅ Sistema limpo e pronto para novo dia!');
+    console.log('🔄'.repeat(20) + '\n');
 }
 
 function gerarHorariosDoDia(data) {
@@ -108,6 +123,16 @@ async function checarHorario() {
         const data = agoraSp.format("YYYY-MM-DD");
         const horaMinuto = agoraSp.format("HH:mm");
 
+        // Verifica se deve resetar o sistema às 07:50
+        if (horaMinuto === "07:50" && !jaResetouHoje) {
+            resetarSistema();
+        }
+
+        // Reset da flag de reset no final do dia
+        if (horaMinuto === "00:00") {
+            jaResetouHoje = false;
+        }
+
         // Gera os horários aleatórios do dia se ainda não foram gerados
         const horariosAleatorios = gerarHorariosDoDia(data);
 
@@ -115,7 +140,9 @@ async function checarHorario() {
         const horaAtual = agoraSp.format("HH:mm");
         const proximoHorario = horariosAleatorios.find(h => h > horaAtual);
 
-        process.stdout.write(`\r⏱️  ${horaAtual} | Próximo ponto: ${proximoHorario || 'Fim do expediente'} `);
+        // Status visual melhorado
+        const statusReset = jaResetouHoje ? "✅" : "⏳";
+        process.stdout.write(`\r⏱️  ${horaAtual} | Próximo ponto: ${proximoHorario || 'Fim do expediente'} | Reset hoje: ${statusReset} `);
 
         // Verifica se o horário atual coincide com algum dos horários aleatórios
         if (horariosAleatorios.includes(horaMinuto)) {
@@ -132,11 +159,11 @@ async function checarHorario() {
     }
 }
 
-
 // Executa a cada minuto
 setInterval(checarHorario, 60 * 1000);
 checarHorario();
 
-console.log('🚀 Sistema de ponto com horários aleatórios iniciado');
+console.log('🚀 Sistema de ponto com horários aleatórios e reset automático iniciado');
+console.log('🔄 Reset automático configurado para 07:50 todos os dias');
 console.log('💡 Os horários serão exibidos quando forem gerados pela primeira vez no dia');
-registrarLog('Sistema de ponto com horários aleatórios iniciado');
+registrarLog('Sistema de ponto com horários aleatórios e reset automático iniciado');
