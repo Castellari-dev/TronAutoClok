@@ -11,6 +11,8 @@ const intervalosHorarios = [
     { inicio: '18:00', fim: '18:10' }
 ];
 
+console.log(`email: ${process.env.EMAIL} - senha: ${process.env.SENHA}`)
+
 let ultimosLogins = {};
 let horariosAleatorioDoDia = {};
 let jaResetouHoje = false;
@@ -119,7 +121,19 @@ async function login() {
 
 async function checarHorario() {
     try {
+        
         const agoraSp = moment().tz("America/Sao_Paulo");
+        /*
+
+        Descomente esse trecho se você não trabalha nos finais de semana
+
+        const diaSemana = agoraSp.day();
+        if (diaSemana === 0 || diaSemana === 6) {
+            console.log(`📅 Hoje é fim de semana (${agoraSp.format('dddd')}), ponto não será batido.`);
+            return;
+        } 
+            
+        */
         const data = agoraSp.format("YYYY-MM-DD");
         const horaMinuto = agoraSp.format("HH:mm");
 
@@ -142,7 +156,6 @@ async function checarHorario() {
 
         // Status visual melhorado
         const statusReset = jaResetouHoje ? "✅" : "⏳";
-        process.stdout.write(`\r⏱️  ${horaAtual} | Próximo ponto: ${proximoHorario || 'Fim do expediente'} | Reset hoje: ${statusReset} `);
 
         // Verifica se o horário atual coincide com algum dos horários aleatórios
         if (horariosAleatorios.includes(horaMinuto)) {
